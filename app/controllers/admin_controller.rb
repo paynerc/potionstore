@@ -175,7 +175,7 @@ class AdminController < ApplicationController
                   from orders
                  where status = 'C' and
                        lower(payment_type) != 'free' and
-                       current_date - #{days-1} <= order_time) as orders,
+                       DATE_SUB(current_date, INTERVAL #{days-1} DAY) <= order_time) as orders,
                sum(line_items.unit_price * quantity)
                  - sum(coalesce(coupons.amount, 0))
                  - sum(line_items.unit_price * quantity * coalesce(percentage, 0) / 100) as revenue,
@@ -187,7 +187,7 @@ class AdminController < ApplicationController
              left outer join products on products.id = line_items.product_id
              left outer join coupons on coupons.id = orders.coupon_id
 
-        where status = 'C' and lower(payment_type) != 'free' and current_date - #{days-1} <= order_time
+        where status = 'C' and lower(payment_type) != 'free' and DATE_SUB(current_date, INTERVAL #{days-1} DAY) <= order_time
 
         group by product_name"
     end
@@ -244,7 +244,7 @@ class AdminController < ApplicationController
                inner join line_items on orders.id = line_items.order_id
                left outer join coupons on coupons.id = orders.coupon_id
 
-         where status = 'C' and lower(payment_type) != 'free' and current_date - #{days-1} <= order_time"
+         where status = 'C' and lower(payment_type) != 'free' and DATE_SUB(current_date, INTERVAL #{days-1} DAY) <= order_time"
       result = Order.connection.select_all(last_n_days_sql)
       return (result != nil && result.length > 0 && result[0]["revenue"] != nil) ? result[0]["revenue"] : 0
     end

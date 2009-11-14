@@ -132,7 +132,7 @@ class Admin::ChartsController < ApplicationController
               inner join line_items on orders.id = line_items.order_id
               left outer join coupons on coupons.id = orders.coupon_id
 
-        where status = 'C' and lower(payment_type) != 'free' and current_date - #{days-1} <= order_time
+        where status = 'C' and lower(payment_type) != 'free' and DATE_SUB(current_date, INTERVAL #{days-1} DAY) <= order_time
 
         group by year, month, day, days_ago
 
@@ -152,7 +152,7 @@ class Admin::ChartsController < ApplicationController
               inner join line_items on orders.id = line_items.order_id
               left outer join coupons on coupons.id = orders.coupon_id
 
-        where status = 'C' and lower(payment_type) != 'free' and current_date - #{days-1} <= order_time
+        where status = 'C' and lower(payment_type) != 'free' and DATE_SUB(current_date, INTERVAL #{days-1} DAY) <= order_time
 
         group by year, month, day, days_ago
 
@@ -172,7 +172,7 @@ class Admin::ChartsController < ApplicationController
             inner join line_items on orders.id = line_items.order_id
             left outer join coupons on coupons.id = orders.coupon_id
 
-      where status = 'C' and lower(payment_type) != 'free' and current_date - #{(weeks-1)*7} <= order_time
+      where status = 'C' and lower(payment_type) != 'free' and DATE_SUB(current_date, INTERVAL #{(weeks - 1) * 7} DAY) <= order_time
 
       group by week
 
@@ -202,7 +202,7 @@ class Admin::ChartsController < ApplicationController
       # Assume mysql if it's not postgresql
       "select extract(year from orders.order_time) as year,
               extract(month from orders.order_time) as month,
-              month(datediff(now(), orders.order_time)) as months_ago,
+              PERIOD_DIFF(EXTRACT(YEAR_MONTH FROM now()), EXTRACT(YEAR_MONTH FROM orders.order_time)) as months_ago,
               sum(line_items.unit_price * quantity)
                 - sum(coalesce(coupons.amount, 0))
                 - sum(line_items.unit_price * quantity * coalesce(percentage, 0) / 100) as revenue,
